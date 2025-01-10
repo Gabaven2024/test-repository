@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アクティブパラダイス</title>
+    <style>
+        body {
+            text-align: center;
+            background-image: url('画像1.png');
+            background-size: cover;
+            color: white;
+        }
+        #monster {
+            width: 150px;
+        }
+        #hp-bar {
+            width: 300px;
+            height: 20px;
+            background-color: rgb(255, 255, 255);
+            border: 2px solid black;
+            position: relative;
+            margin: 0 auto;
+        }
+        #hp {
+            height: 100%;
+            background-color: green;
+            transition: width 0.5s;
+        }
+        #mission-btn, #calendar-btn, .training-btn, #attack-btn {
+            background-color: #ffcc00;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px 0; /* 追加：上下の間隔を10pxに */
+        }
+        #mission-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+        #calendar-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        #training-options {
+            display: none;
+        }
+        #calendar {
+            display: none;
+            background: white;
+            color: black;
+            padding: 10px;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 40px);
+            gap: 5px;
+        }
+        .calendar-day {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            line-height: 40px;
+            border: 1px solid black;
+        }
+        .completed-day {
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+        }
+        #calendar-navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        #prev-month, #next-month {
+            background-color: #ff6699;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        h1 {
+            margin-top: 100px;
+        }
+        /* 全ボタン共通のスタイル */
+        .custom-btn {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 30px; /* 角丸デザイン */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 記録ボタン（オレンジ） */
+        #record-btn {
+        background-color: #FF9800;
+        color: white;
+        }
+
+        #record-btn:hover {
+            background-color: #f57c00;
+            transform: scale(1.1);
+        }
+
+        /* トレーニングミッションボタン（青） */
+        #mission-btn {
+            background-color: #ee5daa;
+            color: white;
+        }
+
+        #mission-btn:hover {
+            background-color: #f32191;
+            transform: scale(1.1);
+        }
+
+        /* アタックボタン（赤） */
+        #attack-btn {
+            background-color: #f85a4f;
+            color: white;
+        }
+
+        #attack-btn:hover {
+            background-color: #d12b28;
+            transform: scale(1.1);
+        }
+        .difficulty-btn {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 30px; /* 丸みのあるデザイン */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* かんたん（緑） */
+        .difficulty-btn.easy {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .difficulty-btn.easy:hover {
+            background-color: #45a049;
+            transform: scale(1.1);
+        }
+
+        /* ふつう（青） */
+        .difficulty-btn.normal {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .difficulty-btn.normal:hover {
+            background-color: #1e88e5;
+            transform: scale(1.1);
+        }
+
+        /* むずかしい（赤） */
+        .difficulty-btn.hard {
+            background-color: #F44336;
+            color: white;
+        }
+
+        .difficulty-btn.hard:hover {
+            background-color: #e53935;
+            transform: scale(1.1);
+        }
+        /* モンスターの揺れアニメーション */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* ダメージエフェクト */
+        .damage-effect {
+            position: absolute;
+            color: red;
+            font-size: 20px;
+            font-weight: bold;
+            animation: damage-pop 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* 吹き出し風エフェクトのアニメーション */
+        @keyframes damage-pop {
+            0% { transform: scale(0.5); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+    <h1>アクティブパラダイス！</h1>
+    <button id="mission-btn" class="custom-btn" onclick="toggleTrainingOptions()">🚀 トレーニングミッション</button>
+    <button id="calendar-btn" class="custom-btn" onclick="toggleCalendar()">📅記録</button>
+    <div id="difficulty-options" style="display: none;">
+        <button class="difficulty-btn easy" onclick="showTraining('easy')">🌱 かんたん</button>
+        <button class="difficulty-btn normal" onclick="showTraining('normal')">⚡ ふつう</button>
+        <button class="difficulty-btn hard" onclick="showTraining('hard')">🔥 むずかしい</button>
+    </div>        
+    <div id="training-options" style="display: none;">
+        <div id="training-easy" style="display: none;">
+            <button class="training-btn" onclick="startMission('ジャンプ10回')">ジャンプ10回</button>
+            <button class="training-btn" onclick="startMission('前回り1回')">前回り1回</button>
+            <button class="training-btn" onclick="startMission('腕回し15秒')">腕回し15秒</button>
+            <button class="training-btn" onclick="startMission('かけ足10秒')">かけ足10秒</button>
+            <button class="training-btn" onclick="startMission('屈伸運動5回')">屈伸運動5回</button>
+            <button class="training-btn" onclick="startMission('かかと上げ下げ5回')">かかと上げ下げ5回</button>
+            <button class="training-btn" onclick="startMission('片足立ち5秒')">片足立ち5秒</button>
+            <button class="training-btn" onclick="startMission('アキレス腱を伸ばす運動（短め）')">アキレス腱を伸ばす運動（短め）</button>
+            <button class="training-btn" onclick="startMission('ハイタッチジャンプ5回')">ハイタッチジャンプ5回</button>
+            <button class="training-btn" onclick="startMission('親子でジャンプ5回')">親子でジャンプ5回</button>
+        </div>
+        
+        <div id="training-normal" style="display: none;">
+            <button class="training-btn" onclick="startMission('ジャンプ15回')">ジャンプ15回</button>
+        <button class="training-btn" onclick="startMission('前回り3回')">前回り3回</button>
+        <button class="training-btn" onclick="startMission('腕回し30秒')">腕回し30秒</button>
+        <button class="training-btn" onclick="startMission('かけ足20秒')">かけ足20秒</button>
+        <button class="training-btn" onclick="startMission('屈伸運動10回')">屈伸運動10回</button>
+        <button class="training-btn" onclick="startMission('かかと上げ下げ10回')">かかと上げ下げ10回</button>
+        <button class="training-btn" onclick="startMission('片足立ち10秒')">片足立ち10秒</button>
+        <button class="training-btn" onclick="startMission('アキレス腱を伸ばす運動')">アキレス腱を伸ばす運動</button>
+        <button class="training-btn" onclick="startMission('ハイタッチジャンプ10回')">ハイタッチジャンプ10回</button>
+        <button class="training-btn" onclick="startMission('親子でジャンプ10回')">親子でジャンプ10回</button>
+        <button class="training-btn" onclick="startMission('親子で前屈後屈30秒')">親子で前屈後屈30秒</button>
+        <button class="training-btn" onclick="startMission('親子で腹筋5回')">親子で10回</button>
+        <button class="training-btn" onclick="startMission('親子で腕立て伏せ10回')">親子で腕立て伏せ10回</button>
+        <button class="training-btn" onclick="startMission('親子でかけ足30秒')">親子でかけ足30秒</button>
+        <button class="training-btn" onclick="startMission('親子でお尻歩き5メートル')">親子でお尻歩き5メートル</button>
+        <button class="training-btn" onclick="startMission('親子で足上げ運動20回')">親子で足上げ運動20回</button>
+        </div>
+    
+        <div id="training-hard" style="display: none;">
+            <button class="training-btn" onclick="startMission('ジャンプ30回')">ジャンプ30回</button>
+            <button class="training-btn" onclick="startMission('前回り5回')">前回り5回</button>
+            <button class="training-btn" onclick="startMission('腕回し60秒')">腕回し60秒</button>
+            <button class="training-btn" onclick="startMission('かけ足40秒')">かけ足40秒</button>
+            <button class="training-btn" onclick="startMission('屈伸運動20回')">屈伸運動20回</button>
+            <button class="training-btn" onclick="startMission('かかと上げ下げ20回')">かかと上げ下げ20回</button>
+            <button class="training-btn" onclick="startMission('片足立ち20秒')">片足立ち20秒</button>
+            <button class="training-btn" onclick="startMission('アキレス腱を伸ばす運動（長め）')">アキレス腱を伸ばす運動（長め）</button>
+            <button class="training-btn" onclick="startMission('ハイタッチジャンプ20回')">ハイタッチジャンプ20回</button>
+            <button class="training-btn" onclick="startMission('親子でジャンプ20回')">親子でジャンプ20回</button>
+        </div>
+    </div>
+    <div>
+        <img id="monster" src="スライム.png" alt="モンスター">
+    </div>
+    <div id="hp-bar">
+        <div id="hp" style="width: 100%;"></div>
+    </div>
+    <p>モンスターのHP: <span id="hp-text">100</span></p>
+    <p>あなたのMP: <span id="mp-text">100</span></p>
+    <button id="attack-btn" class="custom-btn" onclick="attackMonster()">⚔️アタック⚔️</button>
+    <div id="calendar">
+        <div id="calendar-navigation">
+            <button id="prev-month" onclick="prevMonth()">◁</button>
+            <h3 id="calendar-title">2025年1月</h3>
+            <button id="next-month" onclick="nextMonth()">▷</button>
+        </div>
+        <div class="calendar-grid" id="calendar-days"></div>
+    </div>
+    <script>
+        let monsterHP = 100;
+        let mp = 100;
+        let currentMonth = 1;
+
+        function showTrainingOptions() {
+            document.getElementById('training-options').style.display = 'block';
+        }
+        function startMission(trainingType) {
+    alert(trainingType + "のカメラ機能に移動します！");
+
+    // MPを即時増加
+    mp += 10;
+    document.getElementById('mp-text').innerText = mp;
+    document.getElementById('mp-text').style.color = 'yellow'; // 視覚的変化を追加
+
+    // 新しいタブで「カメラ.html」を開く
+    window.open('カメラ.html', '_blank');
+
+    // トレーニングオプションを非表示
+    document.getElementById('training-options').style.display = 'none';
+    }
+
+    function attackMonster() {
+        if (mp >= 10) {
+            monsterHP -= 10;
+            mp -= 10;
+            if (monsterHP < 0) monsterHP = 0;
+
+            document.getElementById('hp-text').innerText = monsterHP;
+            document.getElementById('mp-text').innerText = mp;
+            document.getElementById('hp').style.width = monsterHP + '%';
+
+            // モンスターを揺らす
+            let monster = document.getElementById('monster');
+            monster.style.animation = "shake 0.5s";
+
+            // ダメージエフェクトを表示
+            showDamageEffect();
+
+            // アニメーションが終わったらリセット
+            setTimeout(() => {
+            monster.style.animation = "";
+            }, 500);
+
+            if (monsterHP === 0) {
+            alert("モンスターを倒した！");
+            markCalendar();
+            toggleCalendar();
+            }
+            } else {
+            alert("MPが足りません！");
+        }
+    }
+
+    function showDamageEffect() {
+        let monster = document.getElementById('monster');
+        let effectContainer = document.createElement('div');
+        effectContainer.classList.add('damage-effect');
+        effectContainer.innerText = "-10";
+
+        // モンスターのランダムな位置に表示
+        let randomX = Math.random() * 100 - 50; // モンスターの中心から少しズレた位置
+        let randomY = Math.random() * 50 - 25;
+    
+        effectContainer.style.left = `${monster.offsetLeft + randomX + 50}px`;
+        effectContainer.style.top = `${monster.offsetTop + randomY}px`;
+
+        document.body.appendChild(effectContainer);
+
+        // エフェクトが終わったら削除
+        setTimeout(() => {
+            effectContainer.remove();
+        }, 500);
+    }
+
+
+        function markCalendar() {
+        let savedDates = JSON.parse(localStorage.getItem('defeatDates')) || [];
+        let today = new Date();
+        let currentMonthDays = document.getElementsByClassName('calendar-day');
+
+        for (let day of currentMonthDays) {
+        let dayNumber = parseInt(day.innerText);
+        let formattedDate = `2025-${currentMonth}-${dayNumber}`;
+
+        if (savedDates.includes(formattedDate)) {
+            day.classList.add('completed-day');
+        }
+
+        if (dayNumber === today.getDate() && currentMonth === (today.getMonth() + 1)) {
+            day.classList.add('completed-day');
+        }
+        }
+        }
+
+        function toggleCalendar() {
+            let calendar = document.getElementById('calendar');
+            calendar.style.display = calendar.style.display === 'block' ? 'none' : 'block';
+            if (calendar.style.display === 'block') renderCalendar();
+        }
+
+        function saveDefeatDate() {
+        let savedDates = JSON.parse(localStorage.getItem('defeatDates')) || [];
+        let today = new Date();
+        let formattedDate = `2025-${today.getMonth() + 1}-${today.getDate()}`;
+
+        if (!savedDates.includes(formattedDate)) {
+        savedDates.push(formattedDate);
+        localStorage.setItem('defeatDates', JSON.stringify(savedDates));
+        }
+        }
+
+        function toggleTrainingOptions() {
+        let difficultyOptions = document.getElementById('difficulty-options');
+        difficultyOptions.style.display = difficultyOptions.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function showTraining(level) {
+        document.getElementById('training-options').style.display = 'block';
+        document.getElementById('training-easy').style.display = 'none';
+        document.getElementById('training-normal').style.display = 'none';
+        document.getElementById('training-hard').style.display = 'none';
+
+        if (level === 'easy') {
+        document.getElementById('training-easy').style.display = 'block';
+        } else if (level === 'normal') {
+        document.getElementById('training-normal').style.display = 'block';
+        } else if (level === 'hard') {
+        document.getElementById('training-hard').style.display = 'block';
+        }
+        }
+
+        function renderCalendar() {
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const calendarDays = document.getElementById('calendar-days');
+        calendarDays.innerHTML = '';
+
+        for (let i = 1; i <= daysInMonth[currentMonth - 1]; i++) {
+        let dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        dayDiv.innerText = i;
+        calendarDays.appendChild(dayDiv);
+        }
+
+        document.getElementById('calendar-title').innerText = `2025年${currentMonth}月`;
+
+        markCalendar();  // ★ ここで保存された日付を反映
+        }
+
+
+        function prevMonth() {
+            if (currentMonth > 1) {
+                currentMonth--;
+                renderCalendar();
+            }
+        }
+
+        function nextMonth() {
+            if (currentMonth < 12) {
+                currentMonth++;
+                renderCalendar();
+            }
+        }
+    </script>
+</body>
+</html>
