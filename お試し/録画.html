@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>運動している様子を撮影しよう！</title>
+  <style>
+    /* 背景と文字の基本スタイル */
+    body {
+      font-family: 'Comic Sans MS', sans-serif;
+      background-color: #ffeb3b; /* 明るい黄色 */
+      color: #333;
+      text-align: center;
+      padding: 30px;
+    }
+
+    /* ヘッダーのスタイル */
+    h1 {
+      color: #ff4081; /* ピンク色 */
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+
+    h3 {
+      color: #6200ea; /* 紫色 */
+      font-size: 24px;
+      margin-top: 40px;
+    }
+
+    /* 動画プレーヤーのスタイル */
+    video {
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ボタンのスタイル */
+    button {
+      background-color: #ff4081; /* ピンク色 */
+      color: white;
+      font-size: 18px;
+      padding: 15px 30px;
+      margin: 10px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:disabled {
+      background-color: #c1c1c1;
+      cursor: not-allowed;
+    }
+
+    button:hover {
+      background-color: #f50057; /* 明るいピンク */
+    }
+
+    /* ビデオコンテナ */
+    .video-container {
+      margin: 20px 0;
+    }
+
+    /* "やったね！" のスタイル */
+    #congratulations {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 75px; /* フォントサイズを75pxに設定 */
+      font-family: 'Pacifico', cursive;
+      font-weight: bold;
+      color: #ff4081; /* ピンク色 */
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 30px 50px;
+      border-radius: 30px;
+      animation: bounce 1s infinite; /* バウンドを続ける */
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* "やったね！" のバウンドアニメーション */
+    @keyframes bounce {
+      0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.2);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>運動している様子を撮影しよう！</h1>
+
+  <!-- ユーザーのカメラ映像を表示 -->
+  <div class="video-container">
+    <h3>あなたの運動映像</h3>
+    <video id="videoElement" width="640" height="480" autoplay></video>
+  </div>
+
+  <!-- 録画開始、停止ボタン -->
+  <button id="startButton">録画開始！</button>
+  <button id="stopButton" disabled>録画停止</button>
+
+  <!-- 録画した映像を表示 -->
+  <div class="video-container">
+    <h3>録画した運動映像</h3>
+    <video id="recordedVideo" width="640" height="480" controls></video>
+  </div>
+
+  <!-- "🎉やったね！" のメッセージ -->
+  <div id="congratulations">🎉やったね！</div>
+
+  <script>
+    let mediaRecorder;
+    let recordedChunks = [];
+
+    // ページ読み込み時にカメラのアクセスをリクエスト
+    window.onload = async function() {
+      try {
+        // ユーザーのカメラとマイクにアクセス
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        
+        // ユーザーのカメラ映像をリアルタイムで表示
+        document.getElementById("videoElement").srcObject = stream;
+
+        // メディアレコーダーを作成
+        mediaRecorder = new MediaRecorder(stream);
+        
+        // データが利用可能になった時の処理
+        mediaRecorder.ondataavailable = function(event) {
+          recordedChunks.push(event.data);
+        };
+
+        // 録画停止時の処理
+        mediaRecorder.onstop = function() {
+          const blob = new Blob(recordedChunks, { type: "video/webm" });
+          const url = URL.createObjectURL(blob);
+          document.getElementById("recordedVideo").src = url;
+        };
+
+      } catch (err) {
+        console.error("カメラやマイクの取得に失敗しました:", err);
+      }
+    };
+
+    // 録画開始
+    document.getElementById("startButton").addEventListener("click", function() {
+      mediaRecorder.start();
+      document.getElementById("startButton").disabled = true;
+      document.getElementById("stopButton").disabled = false;
+    });
+
+    // 録画停止
+    document.getElementById("stopButton").addEventListener("click", function() {
+      mediaRecorder.stop();
+      document.getElementById("startButton").disabled = false;
+      document.getElementById("stopButton").disabled = true;
+
+      // "🎉やったね！" を表示
+      const congratulationsElement = document.getElementById("congratulations");
+      congratulationsElement.style.display = "block";
+
+      // 3秒後に "🎉やったね！" を非表示に
+      setTimeout(function() {
+        congratulationsElement.style.display = "none";
+      }, 3000); // 文字を3秒間表示
+    });
+  </script>
+</body>
+</html>

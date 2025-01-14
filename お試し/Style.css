@@ -1,0 +1,45 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 50px;
+}
+
+#monster-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#monster-image {
+    margin-right: 10px; /* モンスター画像と体力ゲージの間にスペースを追加 */
+}
+
+#exercise-button {
+    font-size: 20px;
+    padding: 10px 20px;
+    margin-top: 20px;
+}
+
+#message {
+    font-size: 18px;
+    color: green;
+    margin-top: 20px;
+}
+
+/* 体力ゲージのスタイル */
+#health-bar {
+    width: 100px; /* ゲージの幅を小さく */
+    height: 10px; /* ゲージの高さを小さく */
+    appearance: none;
+}
+
+#health-bar::-webkit-progress-bar {
+    background-color: #ddd;
+    border-radius: 5px;
+}
+
+#health-bar::-webkit-progress-value {
+    background-color: #ff4d4d;
+    border-radius: 5px;
+}
